@@ -1,37 +1,22 @@
 ---
 title: "Homework 1"
-author: "[Insert your name here]{style='background-color: yellow;'}"
+author: "[Jeevesh Gupta]{style='background-color: yellow;'}"
 toc: true
 title-block-banner: true
 title-block-style: default
-format: html
-#format: pdf
----
-
-[Link to the Github repository](https://github.com/STAT380/hw1.git)
+output:
+  pdf_document: default
 
 ---
 
-::: {.callout-important}
-## Due: Fri, Jan 26, 2024 @ 11:59pm
+install.packages('tinytex')
+tinytex::install_tinytex()
+install.packages("microbenchmark")
 
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE) #, dpi = 300)
+```
 
-
-Please read the instructions carefully before submitting your assignment. 
-
-1. This assignment requires you to:
-    - Upload your Quarto markdown files to a `git` repository
-    - Upload a `PDF` file on Canvas
-
-1. Don't collapse any code cells before submitting. 
-
-1. Remember to make sure all your code output is rendered properly before uploading your submission.
-
-
-⚠️ Please add your name to the the author information in the frontmatter before submitting your assignment. 
-:::
-
-<br><br><br><br>
 ---
 
 ## Question 1
@@ -76,7 +61,6 @@ If you're stuck at any step along the way, you can refer to the [official Github
 
 
 <br><br><br><br>
-<br><br><br><br>
 ---
 
 ## Question 2
@@ -106,18 +90,33 @@ For the following questions, provide your answers in a code cell.
 
 1. What data type does the vector contain?
 
-1. Create two new vectors called `my_vec_double` and `my_vec_int` which converts `my_vec` to Double & Integer types, respectively, 
+2. Create two new vectors called `my_vec_double` and `my_vec_int` which converts `my_vec` to Double & Integer types, respectively, 
 
-1. Create a new vector `my_vec_bool` which comprises of:
+3. Create a new vector `my_vec_bool` which comprises of:
     * ```r TRUE```if an element in `my_vec_double` is $\le 0$
     * ```r FALSE``` if an element in `my_vec_double` is $\ge 0$
 
-    How many elements of `my_vec_double` are greater than zero?
+How many elements of `my_vec_double` are greater than zero?
+4. Sort the values of `my_vec_double` in ascending order. 
 
-1. Sort the values of `my_vec_double` in ascending order. 
+```{R}
+#a) character
+#b
+my_vec_double <- as.numeric(my_vec)
+my_vec_int <- as.integer(my_vec)
+#c)
+my_vec_bool <- my_vec_double <= 0
+num_elements_greater_than_zero <- sum(my_vec_double > 0)
+print(my_vec_bool)
+print(num_elements_greater_than_zero)
+#d)
+print(sort(my_vec_double))
 
 
-<br><br><br><br>
+```
+
+
+
 <br><br><br><br>
 ---
 
@@ -178,63 +177,78 @@ mean(M)
 
 2. Write a function `row_wise_scan` which scans the entries of `M` one row after another and outputs the number of elements whose value is $\ge 0$. You can use the following **starter code**
 
-```R
-row_wise_scan <- function(x){
+```{R}
+row_wise_scan <- function(x) {
     n <- nrow(x)
     m <- ncol(x)
 
-    # Insert your code here
     count <- 0
-    for(...){
-        for(...){
-            if(...){
-                count <- count + 1 
+    for (i in 1:n) {
+        for (j in 1:m) {
+            if (x[i, j] >= 0) {
+                count <- count + 1
             }
         }
     }
 
     return(count)
 }
+
+row_wise_result <- row_wise_scan(M)
+print(row_wise_result)
 ```
 
 
 3. Similarly, write a function `col_wise_scan` which does exactly the same thing but scans the entries of `M` one column after another
 
-```R
-col_wise_scan <- function(x){
+```{R}
+col_wise_scan <- function(x) {
+    n <- nrow(x)
+    m <- ncol(x)
+
     count <- 0
-    
-    ... # Insert your code here
+    for (j in 1:m) {
+        for (i in 1:n) {
+            if (x[i, j] >= 0) {
+                count <- count + 1
+            }
+        }
+    }
 
     return(count)
 }
+col_wise_result <- col_wise_scan(M)
+print(col_wise_result)
+
 ```
 You can check if your code is doing what it's supposed to using the function here[^footnote]
 
 4. Between `col_wise_scan` and `row_wise_scan`, which function do you expect to take shorter to run? Why?
 
+col_wise_scan, better cache locality
+
 5. Write a function `time_scan` which takes in a method `f` and a matrix `M` and outputs the amount of time taken to run `f(M)`
 
-```R
-time_scan <- function(f, M){
-    initial_time <- ... # Write your code here
-    f(M)
-    final_time <- ...  # Write your code here
-    
-    total_time_taken <- final_time - initial_time
+```{R}
+time_scan <- function(f, M) {
+    timings <- system.time(f(M))
+    total_time_taken <- timings[3]
+
     return(total_time_taken)
 }
+
 ```
 
 Provide your output to
 
-```R
+```{R}
 list(
     row_wise_time = time_scan(row_wise_scan, M),
-    col_wise_time = time_scan(row_wise_scan, M)
+    col_wise_time = time_scan(col_wise_scan, M)
 )
 ```
 Which took longer to run? 
+
 
 6. Repeat this experiment now when:
     * `M` is a $100 \times 100$ matrix
@@ -243,7 +257,29 @@ Which took longer to run?
 
 What can you conclude?
 
-<br><br><br><br>
+```{R}
+M_100 <- generate_matrix(100)
+M_1000 <- generate_matrix(1000)
+M_5000 <- generate_matrix(5000)
+
+time_100 <- list(
+    row_wise_time = time_scan(row_wise_scan, M_100),
+    col_wise_time = time_scan(col_wise_scan, M_100)
+)
+
+time_1000 <- list(
+    row_wise_time = time_scan(row_wise_scan, M_1000),
+    col_wise_time = time_scan(col_wise_scan, M_1000)
+)
+
+time_5000 <- list(
+    row_wise_time = time_scan(row_wise_scan, M_5000),
+    col_wise_time = time_scan(col_wise_scan, M_5000)
+)
+
+list(time_100 = time_100, time_1000 = time_1000, time_5000 = time_5000)
+```
+as matrix size increases, both functions show an increase in the time taken. linear time complexity vs matrix size.
 <br><br><br><br>
 ---
 
